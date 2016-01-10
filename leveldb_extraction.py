@@ -298,7 +298,11 @@ if predict:
     tfidf = pickle.load(open('/home/tim/wiki2/model_tfidf.p'))
     svd = pickle.load(open('svd.p'))
     norm = pickle.load(open('norm.p'))
- 
+    
+    
+    ensemble1 = np.loadtxt("/home/tim/data/allenai/prob_train.csv",skiprows=1, delimiter=',')
+    
+    print ensemble1.shape
  
     if predict_train:
         X, y1, y2, y3, y4, wikipedia = transform_data(train, False)
@@ -357,7 +361,13 @@ if predict:
             s2+= np.sum(func(a2, selection))
             s3+= np.sum(func(a3, selection))
             s4+= np.sum(func(a4, selection))
-        idx = np.argmax([s1,s2,s3,s4])
+            
+        prop = np.array([s1,s2,s3,s4])
+        if prop.sum() > 0:
+            prop = prop/prop.sum()
+        idx = np.argmax(ensemble1[i,1:]+prop)
+        idx2 = np.argmax([s1,s2,s3,s4])
+        print idx, idx2
         
         if predict_train:
             correct += answers[idx] == targets[i]
@@ -367,13 +377,16 @@ if predict:
             print correct/(i+1.0)
             print train['X'][i]
             sum_value = s1 + s2 + s3 + s4
-            predictions.append([train['ids'][i], s1/sum_value, s2/sum_value, s3/sum_value, s4/sum_value])
+            if sum_value == 0: sum_value = 1
+            predictions.append([train['ids'][i], s1/sum_value, s2/sum_value, s3/sum_value, s4/sum_value])  
+                      
         else:
             print test['ids'][i]
             print test['X'][i]
             predictions.append([test['ids'][i],answers[idx]])
         #print predictions[-1]
-        print '------------------'        
+        print '------------------'      
+        
        
     if predict_train:
         with open("/home/tim/data/allenai/results_probabilities.csv",'wb') as f:
